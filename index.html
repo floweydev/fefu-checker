@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FEFU Checker — позиция в конкурсных списках ДВФУ</title>
+<style>
+:root {
+  --bg: #f4f6fa;
+  --card: #ffffff;
+  --text: #1a2332;
+  --muted: #667085;
+  --border: #e3e8ef;
+  --accent: #0b5cad;
+  --accent-dark: #084a8f;
+  --accent-soft: #e9f2fc;
+  --green: #0e9f6e;
+  --green-soft: #e6f7f0;
+  --red: #d14343;
+  --red-soft: #fdecec;
+  --amber: #b45309;
+  --amber-soft: #fdf3e3;
+  --radius: 12px;
+  --shadow: 0 1px 3px rgba(16, 24, 40, .08), 0 1px 2px rgba(16, 24, 40, .04);
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.45;
+}
+main { max-width: 760px; margin: 0 auto; padding: 16px 14px 40px; }
+
+header.app-header {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 28px 14px 8px;
+}
+header.app-header h1 { margin: 0 0 4px; font-size: 22px; }
+header.app-header p { margin: 0; color: var(--muted); font-size: 13.5px; }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  margin-top: 14px;
+}
+
+form#settings-form { margin-top: 14px; }
+.field { margin-bottom: 12px; }
+.field label, .field .label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+.field input[type="text"], .field select {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 15px;
+  color: var(--text);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  outline: none;
+  appearance: none;
+}
+.field input[type="text"]:focus, .field select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(11, 92, 173, .14); }
+.field select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23667085' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 34px;
+}
+.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.checkbox-field { display: flex; align-items: center; gap: 9px; font-size: 14px; cursor: pointer; user-select: none; }
+.checkbox-field input { width: 17px; height: 17px; accent-color: var(--accent); }
+
+button.primary {
+  width: 100%;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background .15s;
+}
+button.primary:hover { background: var(--accent-dark); }
+button.primary:disabled { opacity: .6; cursor: default; }
+button.secondary {
+  padding: 9px 14px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid rgba(11, 92, 173, .25);
+  border-radius: 9px;
+  cursor: pointer;
+}
+button.secondary:hover { background: #dcebfb; }
+.hint { margin-top: 8px; font-size: 12.5px; color: var(--muted); }
+.hint a { color: var(--accent); }
+
+#status { margin-top: 14px; }
+.alert { padding: 13px 15px; border-radius: var(--radius); font-size: 14px; }
+.alert.error { background: var(--red-soft); color: var(--red); border: 1px solid #f3c6c6; }
+.alert.empty { background: var(--amber-soft); color: var(--amber); border: 1px solid #f0ddbb; }
+.alert .alert-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 11px; }
+.alert .alert-link { color: inherit; font-weight: 600; }
+
+.loading { display: flex; align-items: center; gap: 11px; color: var(--muted); font-size: 14px; }
+.spinner {
+  width: 20px; height: 20px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.result-head { margin-bottom: 12px; }
+.result-head h2 { margin: 0 0 3px; font-size: 17px; }
+.result-head .meta { font-size: 12.5px; color: var(--muted); }
+
+.status-banner { padding: 14px 15px; border-radius: var(--radius); margin-bottom: 12px; }
+.status-banner.found { background: var(--green-soft); border: 1px solid #bfe8d6; }
+.status-banner.notfound { background: var(--amber-soft); border: 1px solid #f0ddbb; }
+.status-banner .status-title { font-size: 16px; font-weight: 700; }
+.status-banner.found .status-title { color: var(--green); }
+.status-banner.notfound .status-title { color: var(--amber); }
+.status-banner .status-sub { font-size: 13px; margin-top: 3px; color: var(--muted); }
+
+.metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.metric {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 11px 12px;
+}
+.metric .m-label { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.metric .m-value { font-size: 19px; font-weight: 700; margin-top: 2px; }
+.metric .m-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.metric.accent { border-color: rgba(11, 92, 173, .35); background: var(--accent-soft); }
+.metric .m-value .big { font-size: 26px; }
+.zone-line { margin-top: 12px; padding: 10px 12px; border-radius: 10px; font-size: 14px; font-weight: 600; }
+.zone-line.in { background: var(--green-soft); color: var(--green); }
+.zone-line.out { background: var(--red-soft); color: var(--red); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
+.chip {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  -webkit-overflow-scrolling: touch;
+}
+table.list-table { width: 100%; min-width: 640px; border-collapse: collapse; font-size: 13px; }
+table.list-table th {
+  position: sticky; top: 0;
+  background: var(--bg);
+  text-align: left;
+  padding: 9px 10px;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+table.list-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+table.list-table tr:last-child td { border-bottom: none; }
+table.list-table tr.section-row td {
+  background: var(--bg);
+  font-weight: 700;
+  font-size: 12.5px;
+  color: var(--text);
+  padding: 7px 10px;
+}
+table.list-table tr.row-applicant td { background: var(--accent-soft); }
+table.list-table tr.row-applicant td.pos-cell { box-shadow: inset 3px 0 0 var(--accent); font-weight: 700; }
+.badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11.5px; font-weight: 600; }
+.badge.yes { background: var(--green-soft); color: var(--green); }
+.badge.no { background: var(--bg); color: var(--muted); }
+
+.table-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.table-actions .ta-count { font-size: 12.5px; color: var(--muted); }
+#scroll-to-me-btn { display: none; }
+
+footer {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 14px 30px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+@media (min-width: 560px) {
+  .metrics { grid-template-columns: repeat(3, 1fr); }
+  .row-2 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+}
+@media (min-width: 560px) and (max-width: 900px) {
+  .row-2 { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <h1>FEFU Checker</h1>
+  <p>Ваша позиция в конкурсных списках Дальневосточного федерального университета</p>
+</header>
+
+<main>
+  <form id="settings-form" novalidate>
+    <div class="field">
+      <label for="trainingDirection">Код и название направления</label>
+      <input type="text" id="trainingDirection" list="direction-presets" placeholder="Например: 09.03.04 Программная инженерия" autocomplete="off">
+      <datalist id="direction-presets"></datalist>
+    </div>
+
+    <div class="field">
+      <label for="applicantId">Код абитуриента</label>
+      <input type="text" id="applicantId" inputmode="numeric" placeholder="Например: 1124227" autocomplete="off">
+      <div class="hint">Не знаете свой код? Его можно узнать на сайте ДВФУ: <a href="https://www.dvfu.ru/admission/spd/" target="_blank" rel="noopener">«Узнать свой уникальный код абитуриента»</a></div>
+    </div>
+
+    <div class="row-2">
+      <div class="field">
+        <label for="studyForm">Форма обучения</label>
+        <select id="studyForm"></select>
+      </div>
+      <div class="field">
+        <label for="financingSource">Финансирование</label>
+        <select id="financingSource"></select>
+      </div>
+      <div class="field">
+        <label for="campaignType">Кампания</label>
+        <select id="campaignType"></select>
+      </div>
+      <div class="field">
+        <label for="sort">Сортировка</label>
+        <select id="sort">
+          <option value="BySum" selected>По сумме баллов</option>
+          <option value="ByPriority">По приоритету</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="checkbox-field">
+        <input type="checkbox" id="topPriority" checked>
+        Только с ВПП (высший приоритет)
+      </label>
+    </div>
+
+    <button type="submit" class="primary" id="submit-btn">Проверить позицию</button>
+  </form>
+
+  <div id="status" aria-live="polite"></div>
+
+  <section id="result-card" class="card" hidden></section>
+
+  <section id="table-section" hidden>
+    <div class="table-actions">
+      <span class="ta-count" id="table-count"></span>
+      <button type="button" class="secondary" id="scroll-to-me-btn">Найти меня в таблице</button>
+    </div>
+    <div class="table-wrap">
+      <table class="list-table">
+        <thead>
+          <tr>
+            <th>№</th>
+            <th>Код</th>
+            <th>Сумма</th>
+            <th>Приоритет</th>
+            <th>Высш. приоритет</th>
+            <th>Согласие</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<footer>
+  Данные загружаются с публичного API ДВФУ (www.dvfu.ru/admission/spd) через прокси-шлюз приложения. Проверяйте информацию также на официальном сайте университета.
+</footer>
+
+<script>
+const API_BASE = '/api';
+const STORAGE_KEY = 'fefuChecker.settings';
+const FETCH_TIMEOUT_MS = 30000;
+
+const DIRECTION_PRESETS = [
+  '09.03.04 Программная инженерия',
+  '09.03.01 Информатика и вычислительная техника',
+  '09.03.03 Прикладная информатика',
+  '09.03.02 Информационные системы и технологии',
+  '01.03.02 Прикладная математика и информатика',
+  '11.03.02 Инфокоммуникационные технологии и системы связи',
+  '10.03.01 Информационная безопасность',
+  '38.03.05 Бизнес-информатика',
+  '38.03.01 Экономика',
+  '38.03.02 Менеджмент',
+  '40.03.01 Юриспруденция',
+  '45.03.02 Лингвистика'
+];
+
+const CAMPAIGN_TYPES = [
+  'БВО / бакалавриат / специалитет',
+  'Магистратура / спецВО',
+  'Аспирантура',
+  'Ординатура',
+  'СПО'
+];
+
+const STUDY_FORMS = ['Очная', 'Заочная', 'Очно-заочная'];
+const FINANCING_SOURCES = ['Бюджет', 'Договор'];
+
+const $ = (id) => document.getElementById(id);
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function normalizeId(value) {
+  return String(value).trim().replace(/\s+/g, '');
+}
+
+function fillSelect(select, options) {
+  select.innerHTML = options.map((opt) => `<option value="${escapeHtml(opt)}">${escapeHtml(opt)}</option>`).join('');
+}
+
+function buildQueryParams() {
+  const params = new URLSearchParams();
+  params.set('campaignType', $('campaignType').value);
+  params.set('financingSource', $('financingSource').value);
+  params.set('studyForm', $('studyForm').value);
+  params.set('trainingDirection', $('trainingDirection').value.trim());
+  params.set('sort', $('sort').value);
+  params.set('topPriority', $('topPriority').checked ? 'true' : 'false');
+  params.set('atestOrig', 'false');
+  params.set('enrolled', 'false');
+  params.set('highPriorityNoOriginal', 'false');
+  params.set('approval', 'false');
+  params.set('excludeBudgetEnrolled', 'false');
+  params.set('contract', 'false');
+  return params;
+}
+
+async function fetchAdmissionList(queryString) {
+  const url = `${API_BASE}/admission-list?${queryString}`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    if (!response.ok) {
+      throw new Error(`API вернул ошибку ${response.status}`);
+    }
+    return await response.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function flattenRows(data) {
+  const items = [];
+  let position = 0;
+  for (const section of data.sections || []) {
+    items.push({ type: 'section', title: section.title, count: section.count || 0 });
+    for (const group of section.groups || []) {
+      for (const item of group.rows || []) {
+        position += 1;
+        items.push({
+          type: 'row',
+          position,
+          sectionTitle: section.title,
+          studentId: String(item.studentId).trim(),
+          highlight: item.highlight,
+          values: item.values || {}
+        });
+      }
+    }
+  }
+  return { items, total: position };
+}
+
+function findApplicant(rows, id) {
+  const normalized = normalizeId(id);
+  return rows.find((row) => normalizeId(row.studentId) === normalized) || null;
+}
+
+function getQuotaSummary(quota) {
+  const q = quota || {};
+  const items = [
+    ['Бюджет', q.budgetQuotaCount],
+    ['Отдельная квота', q.separateQuotaCount],
+    ['Особая квота', q.specialQuotaCount],
+    ['Целевая квота', q.targetQuotaCount],
+    ['Иностранцы (бюджет)', q.foreignersBudgetCount]
+  ];
+  return {
+    items: items.filter(([, count]) => Number(count) > 0),
+    total: items.reduce((sum, [, count]) => sum + Number(count || 0), 0)
+  };
+}
+
+function yesNoBadge(value) {
+  return value === true
+    ? '<span class="badge yes">Да</span>'
+    : '<span class="badge no">—</span>';
+}
+
+function renderResults(data, items, applicant, applicantId) {
+  const card = $('result-card');
+  card.hidden = false;
+
+  const quota = getQuotaSummary(data.quota || {});
+  const chips = quota.items.map(([label, count]) => `<span class="chip">${escapeHtml(label)}: ${count}</span>`).join('');
+
+  let banner;
+  let metrics;
+  let zoneLine = '';
+
+  if (applicant) {
+    const values = applicant.values;
+
+    banner = `
+      <div class="status-banner found">
+        <div class="status-title">Вы найдены в списке</div>
+        <div class="status-sub">Код абитуриента: ${escapeHtml(applicant.studentId)} · Секция: ${escapeHtml(applicant.sectionTitle)}</div>
+      </div>`;
+
+    if (quota.total > 0) {
+      zoneLine = applicant.position <= quota.total
+        ? '<div class="zone-line in">Вы в зоне зачисления (ваша позиция в пределах бюджетных мест)</div>'
+        : '<div class="zone-line out">Вы за пределами бюджетных мест по текущим данным</div>';
+    }
+
+    metrics = `
+      <div class="metrics">
+        <div class="metric accent">
+          <div class="m-label">Абсолютная позиция</div>
+          <div class="m-value"><span class="big">${applicant.position}</span> из ${items.filter((i) => i.type === 'row').length}</div>
+        </div>
+        <div class="metric">
+          <div class="m-label">Сумма баллов</div>
+          <div class="m-value">${escapeHtml(values.SumScore != null ? values.SumScore : '—')}</div>
+        </div>
+        <div class="metric">
+          <div class="m-label">Приоритет направления</div>
+          <div class="m-value">${escapeHtml(values.SelectedPriority || '—')}</div>
+        </div>
+        <div class="metric">
+          <div class="m-label">Высший приоритет</div>
+          <div class="m-value">${values.TopPriority === true ? 'Да' : 'Нет'}</div>
+        </div>
+      </div>
+      ${zoneLine}
+      <div class="chips">${chips}</div>`;
+  } else {
+    banner = `
+      <div class="status-banner notfound">
+        <div class="status-title">Абитуриент с кодом «${escapeHtml(applicantId)}» не найден</div>
+        <div class="status-sub">Проверьте код абитуриента или выбранные параметры направления. Возможно, вы подавали документы на другое направление или форму обучения.</div>
+      </div>`;
+    metrics = `
+      <div class="metrics">
+        <div class="metric">
+          <div class="m-label">Всего в списке</div>
+          <div class="m-value">${items.filter((i) => i.type === 'row').length}</div>
+        </div>
+      </div>
+      <div class="chips">${chips}</div>`;
+  }
+
+  const formedAt = data.formedAt ? `Список сформирован: ${escapeHtml(data.formedAt)}` : '';
+  const listType = $('topPriority').checked ? 'только ВПП' : 'все поступающие';
+  card.innerHTML = `
+    <div class="result-head">
+      <h2>${escapeHtml(data.trainingDirection || 'Направление')}</h2>
+      <div class="meta">${escapeHtml(data.campaign || '')} · ${escapeHtml(data.financing || '')} · ${listType} · ${formedAt}</div>
+    </div>
+    ${banner}
+    ${metrics}`;
+}
+
+function renderTable(items, applicantId) {
+  const rows = items.filter((i) => i.type === 'row');
+  const normalizedId = normalizeId(applicantId);
+  const applicantRow = rows.find((r) => normalizeId(r.studentId) === normalizedId);
+
+  let anchorAssigned = false;
+  const body = items.map((item) => {
+    if (item.type === 'section') {
+      return `<tr class="section-row"><td colspan="6">${escapeHtml(item.title || 'Список')} · ${item.count}</td></tr>`;
+    }
+    const v = item.values;
+    const isMe = normalizeId(item.studentId) === normalizedId;
+    const anchor = isMe && !anchorAssigned ? (anchorAssigned = true, ' id="applicant-row"') : '';
+    return `
+      <tr class="${isMe ? 'row-applicant' : ''}"${anchor}>
+        <td class="pos-cell">${item.position}</td>
+        <td>${escapeHtml(item.studentId)}</td>
+        <td>${escapeHtml(v.SumScore != null ? v.SumScore : '—')}</td>
+        <td>${escapeHtml(v.SelectedPriority || '—')}</td>
+        <td>${yesNoBadge(v.TopPriority)}</td>
+        <td>${yesNoBadge(v.Approval)}</td>
+      </tr>`;
+  }).join('');
+
+  $('table-body').innerHTML = body;
+  $('table-count').textContent = `Всего в списке: ${rows.length}`;
+  $('table-section').hidden = false;
+
+  const scrollBtn = $('scroll-to-me-btn');
+  if (applicantRow) {
+    scrollBtn.style.display = 'inline-block';
+    scrollBtn.onclick = () => {
+      const el = $('applicant-row');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+  } else {
+    scrollBtn.style.display = 'none';
+    scrollBtn.onclick = null;
+  }
+}
+
+function showLoading() {
+  $('submit-btn').disabled = true;
+  $('status').innerHTML = '<div class="loading"><div class="spinner"></div>Загружаем данные с API ДВФУ…</div>';
+  $('result-card').hidden = true;
+  $('table-section').hidden = true;
+}
+
+function showError(err) {
+  let message;
+  if (err && err.name === 'AbortError') {
+    message = 'Превышено время ожидания ответа от API ДВФУ. Попробуйте ещё раз.';
+  } else if (err && err.name === 'TypeError') {
+    message = 'Не удалось подключиться к API ДВФУ. Проверьте соединение и попробуйте ещё раз.';
+  } else if (err && /API вернул ошибку/.test(err.message)) {
+    message = `${err.message}. Проверьте параметры запроса (направление, кампанию, форму обучения).`;
+  } else {
+    message = 'Произошла ошибка при загрузке данных. Попробуйте ещё раз.';
+  }
+
+  $('status').innerHTML = `
+    <div class="alert error">
+      <div>${escapeHtml(message)}</div>
+      <div class="alert-actions">
+        <button type="button" class="secondary" id="retry-btn">Повторить</button>
+        <a class="alert-link" href="https://www.dvfu.ru/admission/spd/" target="_blank" rel="noopener">Открыть списки на сайте ДВФУ</a>
+      </div>
+    </div>`;
+
+  $('retry-btn').addEventListener('click', () => runCheck());
+}
+
+function showEmpty() {
+  $('status').innerHTML = `
+    <div class="alert empty">
+      По указанным параметрам списки не найдены. Проверьте код и название направления, форму обучения и источник финансирования.
+    </div>`;
+}
+
+function clearStatus() {
+  $('status').innerHTML = '';
+}
+
+async function runCheck() {
+  const applicantId = normalizeId($('applicantId').value);
+  const direction = $('trainingDirection').value.trim();
+
+  if (!direction) {
+    showEmptyMessage('Укажите код и название направления.');
+    return;
+  }
+  if (!applicantId) {
+    showEmptyMessage('Укажите код абитуриента.');
+    return;
+  }
+
+  saveToLocalStorage();
+  showLoading();
+  try {
+    const data = await fetchAdmissionList(buildQueryParams().toString());
+    if (!data.sections || data.sections.length === 0) {
+      clearStatus();
+      showEmpty();
+      return;
+    }
+    const { items } = flattenRows(data);
+    const rows = items.filter((i) => i.type === 'row');
+    const applicant = findApplicant(rows, applicantId);
+    clearStatus();
+    renderResults(data, items, applicant, applicantId);
+    renderTable(items, applicantId);
+  } catch (err) {
+    showError(err);
+  } finally {
+    $('submit-btn').disabled = false;
+  }
+}
+
+function showEmptyMessage(text) {
+  $('status').innerHTML = `<div class="alert empty">${escapeHtml(text)}</div>`;
+  $('result-card').hidden = true;
+  $('table-section').hidden = true;
+}
+
+function saveToLocalStorage() {
+  const settings = {
+    trainingDirection: $('trainingDirection').value,
+    applicantId: $('applicantId').value,
+    studyForm: $('studyForm').value,
+    financingSource: $('financingSource').value,
+    campaignType: $('campaignType').value,
+    sort: $('sort').value,
+    topPriority: $('topPriority').checked
+  };
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+  } catch (e) {
+    // localStorage может быть недоступен (приватный режим) — игнорируем
+  }
+}
+
+function loadFromLocalStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const settings = JSON.parse(raw);
+    if (settings.trainingDirection) $('trainingDirection').value = settings.trainingDirection;
+    if (settings.applicantId) $('applicantId').value = settings.applicantId;
+    if (settings.studyForm) $('studyForm').value = settings.studyForm;
+    if (settings.financingSource) $('financingSource').value = settings.financingSource;
+    if (settings.campaignType) $('campaignType').value = settings.campaignType;
+    if (settings.sort) $('sort').value = settings.sort;
+    $('topPriority').checked = settings.topPriority !== false;
+  } catch (e) {
+    // повреждённые данные localStorage игнорируем
+  }
+}
+
+function init() {
+  $('direction-presets').innerHTML = DIRECTION_PRESETS.map((d) => `<option value="${escapeHtml(d)}">`).join('');
+  fillSelect($('studyForm'), STUDY_FORMS);
+  fillSelect($('financingSource'), FINANCING_SOURCES);
+  fillSelect($('campaignType'), CAMPAIGN_TYPES);
+
+  loadFromLocalStorage();
+
+  $('settings-form').addEventListener('submit', (event) => {
+    event.preventDefault();
+    runCheck();
+  });
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

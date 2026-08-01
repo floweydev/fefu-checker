@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/api/admission-list",
+      "destination": "https://www.dvfu.ru/admission/spd/api/admission-list"
+    }
+  ]
+}
