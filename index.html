@@ -388,9 +388,9 @@ async function fetchAdmissionList(queryString) {
 
 function flattenRows(data) {
   const items = [];
-  let position = 0;
   for (const section of data.sections || []) {
     items.push({ type: 'section', title: section.title, count: section.count || 0 });
+    let position = 0;
     for (const group of section.groups || []) {
       for (const item of group.rows || []) {
         position += 1;
@@ -398,6 +398,8 @@ function flattenRows(data) {
           type: 'row',
           position,
           sectionTitle: section.title,
+          sectionCount: section.count || 0,
+          sectionQuota: Number(section.quota) || 0,
           studentId: String(item.studentId).trim(),
           highlight: item.highlight,
           values: item.values || {}
@@ -405,7 +407,7 @@ function flattenRows(data) {
       }
     }
   }
-  return { items, total: position };
+  return { items };
 }
 
 function findApplicant(rows, id) {
@@ -454,17 +456,19 @@ function renderResults(data, items, applicant, applicantId) {
         <div class="status-sub">Код абитуриента: ${escapeHtml(applicant.studentId)} · Секция: ${escapeHtml(applicant.sectionTitle)}</div>
       </div>`;
 
-    if (quota.total > 0) {
-      zoneLine = applicant.position <= quota.total
-        ? '<div class="zone-line in">Вы в зоне зачисления (ваша позиция в пределах бюджетных мест)</div>'
-        : '<div class="zone-line out">Вы за пределами бюджетных мест по текущим данным</div>';
+    const seats = applicant.sectionQuota || applicant.sectionCount;
+
+    if (seats > 0) {
+      zoneLine = applicant.position <= seats
+        ? '<div class="zone-line in">Вы в зоне зачисления (ваша позиция в пределах мест конкурса)</div>'
+        : '<div class="zone-line out">Вы за пределами мест конкурса по текущим данным</div>';
     }
 
     metrics = `
       <div class="metrics">
         <div class="metric accent">
-          <div class="m-label">Абсолютная позиция</div>
-          <div class="m-value"><span class="big">${applicant.position}</span> из ${items.filter((i) => i.type === 'row').length}</div>
+          <div class="m-label">Позиция в конкурсе</div>
+          <div class="m-value"><span class="big">${applicant.position}</span> из ${seats} · ${escapeHtml(applicant.sectionTitle)}</div>
         </div>
         <div class="metric">
           <div class="m-label">Сумма баллов</div>
